@@ -14,11 +14,9 @@ Selamat datang di repositori resmi **ZYE STORE ID**! Ini adalah platform E-comme
 
 Untuk melihat bagaimana website ini bekerja dan animasinya yang menarik, Anda **sangat disarankan untuk menambahkan screenshot atau GIF** dari website yang berjalan di sini! Ini akan membuat README Anda jauh lebih interaktif dan menarik.
 
-![Screenshot Tampilan Produk](https://via.placeholder.com/600x400?text=Tambahkan+Screenshot+Produk+Anda+Di+Sini)
-*Contoh: Tampilan berbagai aplikasi premium yang tersedia.*
+JIKA MAU LIHAT HASIL KLIK LINK DEMO DI BWAH
+LINK DEMO WEBSITE NYA :
 
-![Screenshot Animasi Melayang](https://via.placeholder.com/600x400?text=Tambahkan+Screenshot+Animasi+Melayang+Di+Sini)
-*Contoh: Animasi nama pembeli yang melayang di bagian atas layar.*
 
 ## Tentang Website Ini (HTML Web) 📄
 
