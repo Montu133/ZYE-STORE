@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZYE STORE ID - Aplikasi Premium Termurah</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden; /* Prevent horizontal scroll due to animation */
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Gradient header */
+            color: white;
+            padding: 1.5rem 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .product-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; /* Push button to bottom */
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        .buy-button {
+            background: linear-gradient(45deg, #4CAF50 0%, #66BB6A 100%); /* Green gradient */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .buy-button:hover {
+            background: linear-gradient(45deg, #66BB6A 0%, #81C784 100%);
+            transform: scale(1.02);
+        }
+        .buy-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Modal Styling */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        .modal.show .modal-content {
+            transform: translateY(0);
+        }
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s ease;
+        }
+        .close-button:hover {
+            color: #333;
+        }
+        .qris-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 20px auto;
+            display: block;
+            border: 6px solid #667eea; /* Frame for QRIS */
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.5); /* Glowing effect */
+        }
+        .confirm-button {
+            background: linear-gradient(45deg, #007bff 0%, #0056b3 100%); /* Blue gradient */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .confirm-button:hover {
+            background: linear-gradient(45deg, #0056b3 0%, #003d7a 100%);
+            transform: scale(1.02);
+        }
+        .confirm-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Payment Checking Animation */
+        .checking-animation {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+            color: #4CAF50;
+            font-weight: 600;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 123, 255, 0.2);
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Floating Name Animation */
+        .floating-name-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%; /* Keep full height to allow flexible positioning */
+            pointer-events: none; /* Allow clicks to pass through */
+            z-index: 10; /* Below modal, above main content */
+            overflow: hidden;
+        }
+        .floating-name {
+            position: absolute;
+            right: -150px; /* Start off-screen to the right */
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            opacity: 0;
+            animation: fly-across linear forwards;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fly-across {
+            0% {
+                transform: translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1; /* Fade in quickly */
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(-calc(100vw + 300px)); /* Move across screen + off-screen left */
+                opacity: 0; /* Fade out at the end */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Floating Name Animation Container -->
+    <div id="floatingNameContainer" class="floating-name-container"></div>
+
+    <!-- Header Section -->
+    <header class="flex flex-col md:flex-row justify-between items-center px-6 md:px-12">
+        <h1 class="text-3xl font-extrabold mb-2 md:mb-0">ZYE STORE ID</h1>
+        <nav>
+            <ul class="flex space-x-4 text-lg">
+                <li><a href="#" class="hover:text-gray-200 transition-colors duration-200">Beranda</a></li>
+                <li><a href="#" class="hover:text-gray-200 transition-colors duration-200">Produk</a></li>
+                <li><a href="#" class="hover:text-gray-200 transition-colors duration-200">Dukungan</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow container mx-auto p-4 md:p-8">
+        <h2 class="text-4xl font-extrabold text-gray-800 text-center mb-10 mt-6">
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Aplikasi Premium Termurah</span> ❤‍🔥‼️
+        </h2>
+        <p class="text-lg text-gray-700 text-center mb-12 font-semibold">DIJAMIN TRUSTED ABIS 100% CEPAT.</p>
+
+        <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Product cards will be dynamically inserted here by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="mt-auto text-center text-gray-500 text-sm py-6 bg-white shadow-inner">
+        <p>&copy; 2025 ZYE STORE ID. All rights reserved.</p>
+    </footer>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <button class="close-button" id="closeModalBtn">&times;</button>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Pembayaran Produk <span id="modalProductName" class="text-blue-600"></span></h3>
+            <p class="text-gray-700 mb-2">Silakan transfer sesuai nominal berikut:</p>
+            <p class="text-4xl font-extrabold text-green-600 mb-6" id="modalProductPrice">Rp 0</p>
+
+            <img src="https://files.catbox.moe/a2sro6.jpg" alt="QRIS Pembayaran" class="qris-image">
+
+            <p class="text-gray-600 text-sm mt-4">Setelah transfer, klik tombol "Konfirmasi Pembayaran".</p>
+            <button id="confirmPaymentBtn" class="confirm-button w-full mt-6">
+                Konfirmasi Pembayaran
+            </button>
+
+            <div id="checkingAnimation" class="checking-animation hidden">
+                <div class="spinner"></div>
+                <p>Memeriksa pembayaran Anda...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const productListDiv = document.getElementById('product-list');
+            const paymentModal = document.getElementById('paymentModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const modalProductName = document.getElementById('modalProductName');
+            const modalProductPrice = document.getElementById('modalProductPrice');
+            const confirmPaymentBtn = document.getElementById('confirmPaymentBtn');
+            const checkingAnimation = document.getElementById('checkingAnimation');
+            const floatingNameContainer = document.getElementById('floatingNameContainer');
+
+            // Data produk dengan harga yang sudah ditambahkan keuntungan
+            const products = [
+                // Produk sebelumnya (keuntungan 1k)
+                { name: "Netflix 7 hari 1p1u", price: 12000 + 1000, desc: "Akses Netflix 7 hari untuk 1 profil, 1 pengguna." },
+                { name: "Netflix 1 bulan 1p1u", price: 40000 + 1000, desc: "Akses Netflix 1 bulan untuk 1 profil, 1 pengguna." },
+                { name: "Netflix 1 bulan 1p2u", price: 25000 + 1000, desc: "Akses Netflix 1 bulan untuk 1 profil, 2 pengguna." },
+                { name: "Netflix 1 bulan semi private", price: 45000 + 1000, desc: "Akses Netflix 1 bulan semi private." },
+                { name: "Disney+ Hotstar 1 minggu 6u sharing", price: 15000 + 1000, desc: "Disney+ Hotstar 1 minggu, sharing hingga 6 pengguna." },
+                { name: "Disney+ Hotstar 1 bulan sharing 6u", price: 30000 + 1000, desc: "Disney+ Hotstar 1 bulan, sharing hingga 6 pengguna." },
+                { name: "YouTube Premium 1 bulan famplan", price: 7000 + 1000, desc: "YouTube Premium 1 bulan, family plan." },
+                { name: "YouTube Premium 1 bulan indplan", price: 15000 + 1000, desc: "YouTube Premium 1 bulan, individual plan." },
+                { name: "Vidio 1 bulan shar 2u alldev", price: 17000 + 1000, desc: "Vidio 1 bulan sharing 2 pengguna, semua perangkat." },
+                { name: "Vidio 1 bulan priv alldev", price: 30000 + 1000, desc: "Vidio 1 bulan private, semua perangkat." },
+                { name: "Viu 1 bulan private anlim", price: 5000 + 1000, desc: "Viu 1 bulan private, unlimited." },
+                { name: "Viu 2 bulan private anlim", price: 8000 + 1000, desc: "Viu 2 bulan private, unlimited." },
+                { name: "Viu 6 bulan private anlim", price: 15000 + 1000, desc: "Viu 6 bulan private, unlimited." },
+                { name: "Viu 1 tahun private anlim", price: 20000 + 1000, desc: "Viu 1 tahun private, unlimited." },
+                { name: "Viu+ ekslusif 1 bulan sharing 8u", price: 10000 + 1000, desc: "Viu+ eksklusif 1 bulan, sharing 8 pengguna." },
+                { name: "WeTV 1 bulan shar 6u", price: 10000 + 1000, desc: "WeTV 1 bulan sharing 6 pengguna." },
+                { name: "WeTV 1 bulan shar 3u", price: 15000 + 1000, desc: "WeTV 1 bulan sharing 3 pengguna." },
+                { name: "Amazon Prime Video 1 bulan 3u", price: 10000 + 1000, desc: "Amazon Prime Video 1 bulan, 3 pengguna." },
+                { name: "Amazon Prime Video 1 bulan private", price: 18000 + 1000, desc: "Amazon Prime Video 1 bulan private." },
+                { name: "Loklok 1 bulan sharing", price: 20000 + 1000, desc: "Loklok 1 bulan sharing." },
+                { name: "iQiyi 1 bulan sharing", price: 8000 + 1000, desc: "iQiyi 1 bulan sharing." },
+                { name: "iQiyi 1 tahun sharing", price: 18000 + 1000, desc: "iQiyi 1 tahun sharing." },
+                { name: "HBO Max 1 bulan sharing", price: 21000 + 1000, desc: "HBO Max 1 bulan sharing." },
+                { name: "Bstation 1 bulan sharing", price: 8000 + 1000, desc: "Bstation 1 bulan sharing." },
+                { name: "Bstation 1 tahun sharing", price: 18000 + 1000, desc: "Bstation 1 tahun sharing." },
+                { name: "Youku 1 bulan sharing", price: 8000 + 1000, desc: "Youku 1 bulan sharing." },
+                { name: "Youku 1 tahun sharing", price: 18000 + 1000, desc: "Youku 1 tahun sharing." },
+                { name: "Apple Music iMess 1 bulan", price: 10000 + 1000, desc: "Apple Music iMess 1 bulan." },
+                { name: "Canva Pro 1 bulan", price: 5000 + 1000, desc: "Canva Pro 1 bulan." },
+                { name: "Alight Motion 1 tahun sharing", price: 10000 + 1000, desc: "Alight Motion 1 tahun sharing." },
+                { name: "Alight Motion 1 tahun private", price: 18000 + 1000, desc: "Alight Motion 1 tahun private." },
+                { name: "CapCut Pro 1 minggu sharing", price: 8000 + 1000, desc: "CapCut Pro 1 minggu sharing." },
+                { name: "CapCut Pro 1 bulan sharing", price: 22000 + 1000, desc: "CapCut Pro 1 bulan sharing." },
+                { name: "Scribd Premium 1 bulan sharing", price: 7000 + 1000, desc: "Scribd Premium 1 bulan sharing." },
+                { name: "PicsArt Premium 1 bulan sharing", price: 8000 + 1000, desc: "PicsArt Premium 1 bulan sharing." },
+                { name: "Aplikasi Premium Lainnya", price: "Hubungi Kami", desc: "Wattpad, VSCO, Epik, Polar, Dazzcam, Oldroll, CamScanner, Catchplay, iFake, VPN Express, Crunchyroll, iLovePDF, Lightroom." },
+
+                // Produk baru (keuntungan 500 perak)
+                { name: "WETV PRIVATE", price: 15000 + 500, desc: "GARANSI BACKFREE, LOGIN NOMOR" },
+                { name: "VIDIO PLATINUM", price: 21000 + 500, desc: "DURASI 1 BULAN, PRIVATE ALLDEV" },
+                { name: "YOUTUBE FAMHEAD", price: 3500 + 500, desc: "NOGARANSI, WAJIB GANTI SANDI" },
+                { name: "YOUTUBE INDPLAN 1B", price: 3500 + 500, desc: "NOGARANSI, WAJIB GANTI SANDI" },
+                { name: "YOUTUBE INDPLAN 44D", price: 4000 + 500, desc: "NOGARANSI, WAJIB GANTI SANDI" },
+                { name: "SCRIBD 1 BULAN", price: 2000 + 500, desc: "SCRIBD 1 BULAN PRIVATE" },
+                { name: "ZOOM 100 P", price: 2000 + 500, desc: "ZOOM 14 DAY FULLGAR" },
+                { name: "BULK ZOOM 100 P", price: 15000 + 500, desc: "10 AKUN ZOOM 14 DAY FULLGAR" },
+                { name: "PRIME VIDIO PRIVATE", price: 6000 + 500, desc: "PRIME 1 BULAN, FULLGAR" },
+                { name: "ALIGHT MOTION ANDRO", price: 3000 + 500, desc: "PRIVATE 1 TAHUN GARANSI 6 BULAN" },
+                { name: "ALIGHT MOTION IOS", price: 4000 + 500, desc: "PRIVATE 1 TAHUN GARANSI 6 BULAN" },
+                { name: "BSTATION SHARING 1 TAHUN", price: 8000 + 500, desc: "BSTATION SHARING 1 TAHUN" },
+                { name: "CANVA OWNER 1 BULAN", price: 4000 + 500, desc: "DURASI -+30 DAY" },
+                { name: "VIU LIFETIME PRIVATE", price: 2500 + 500, desc: "VIU LIFETIME PRIVATE GARANSI 1 TAHUN" },
+                { name: "VIU 1 TAHUN PRIVATE", price: 1500 + 500, desc: "EXPIRED: 29/06/2026" },
+                { name: "VIU 7 BULAN PRIVATE", price: 1000 + 500, desc: "VIU 7 BULAN PRIVATE, FULLGAR" },
+                { name: "VIU 1 BULAN PRIVATE", price: 600 + 500, desc: "EXPIRED: 18/09/2025" },
+                { name: "VIU BULK 1 TAHUN PRIVATE", price: 10000 + 500, desc: "50 AKUN, EXPIRED: 06/07/2026" },
+                { name: "CAPCUT PRO 30D", price: 4000 + 500, desc: "PRIVATE, GARANSI 7 DAY" },
+                { name: "KODE REDEEM DUOLINGO SUPER", price: 3500 + 500, desc: "DURASI 1 BULAN, KODE EXP 2 SEPTEMBER 2025" }
+            ];
+
+            // Fungsi untuk format harga ke Rupiah
+            const formatRupiah = (amount) => {
+                if (typeof amount === 'string') return amount; // For "Hubungi Kami" or non-numeric prices
+                return new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR',
+                    minimumFractionDigits: 0
+                }).format(amount);
+            };
+
+            // Fungsi untuk menampilkan produk
+            const renderProducts = () => {
+                productListDiv.innerHTML = ''; // Clear existing products
+                products.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'product-card p-6 flex flex-col items-start text-left';
+
+                    productCard.innerHTML = `
+                        <div class="flex items-center mb-4">
+                            <div class="bg-blue-500 text-white rounded-full p-3 mr-4 flex-shrink-0">
+                                <!-- Generic icon, you can replace with specific app icons -->
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800">${product.name}</h3>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 mb-4 flex-grow">${product.desc}</p>
+                        <div class="w-full flex justify-between items-center mt-auto pt-4 border-t border-gray-100">
+                            <p class="text-2xl font-extrabold text-green-600">${formatRupiah(product.price)}</p>
+                            <button class="buy-button" data-name="${product.name}" data-price="${product.price}">
+                                Beli Sekarang
+                            </button>
+                        </div>
+                    `;
+                    productListDiv.appendChild(productCard);
+                });
+
+                // Add event listeners to all "Beli Sekarang" buttons
+                document.querySelectorAll('.buy-button').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const productName = event.target.dataset.name;
+                        const productPrice = event.target.dataset.price;
+
+                        modalProductName.textContent = productName;
+                        modalProductPrice.textContent = formatRupiah(parseInt(productPrice));
+                        
+                        paymentModal.classList.add('show');
+                        // Reset animation state
+                        checkingAnimation.classList.add('hidden');
+                        confirmPaymentBtn.classList.remove('hidden');
+                        confirmPaymentBtn.disabled = false;
+                    });
+                });
+            };
+
+            // Event listener for closing modal
+            closeModalBtn.addEventListener('click', () => {
+                paymentModal.classList.remove('show');
+            });
+
+            // Event listener for confirming payment
+            confirmPaymentBtn.addEventListener('click', () => {
+                confirmPaymentBtn.classList.add('hidden'); // Hide confirm button
+                checkingAnimation.classList.remove('hidden'); // Show checking animation
+
+                // Simulate payment checking
+                setTimeout(() => {
+                    window.location.href = 'https://t.me/ZyeStoreid'; // Redirect to Telegram
+                }, 3000); // 3 seconds delay for animation
+            });
+
+            // --- Floating Name Animation Logic ---
+            const randomNames = [
+                "Siti", "Budi", "Dewi", "Andi", "Rina",
+                "Fajar", "Lina", "Tono", "Maya", "Rio"
+            ];
+
+            const createFloatingName = () => {
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'floating-name';
+                
+                const randomProductIndex = Math.floor(Math.random() * products.length);
+                const randomProductName = products[randomProductIndex].name;
+
+                const randomName = randomNames[Math.floor(Math.random() * randomNames.length)];
+                nameDiv.textContent = `${randomName} membeli ${randomProductName}!`;
+
+                // Adjust randomTop to be in the upper part of the screen (e.g., 50px to 150px from top)
+                const randomTop = Math.random() * 100 + 50; // Between 50px and 150px from the top
+                const randomDuration = Math.random() * (15 - 8) + 8; // 8 to 15 seconds
+                const randomDelay = Math.random() * 5; // 0 to 5 seconds delay
+
+                nameDiv.style.top = `${randomTop}px`;
+                nameDiv.style.animationDuration = `${randomDuration}s`;
+                nameDiv.style.animationDelay = `${randomDelay}s`;
+
+                floatingNameContainer.appendChild(nameDiv);
+
+                // Remove element after animation ends to prevent DOM clutter
+                nameDiv.addEventListener('animationend', () => {
+                    nameDiv.remove();
+                });
+            };
+
+            // Start generating floating names every few seconds
+            setInterval(createFloatingName, 3000); // Create a new name every 3 seconds
+
+            // Render products on page load
+            renderProducts();
+        });
+    </script>
+</body>
+</html>
