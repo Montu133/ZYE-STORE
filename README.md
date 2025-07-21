@@ -16,7 +16,7 @@ Untuk melihat bagaimana website ini bekerja dan animasinya yang menarik, Anda **
 
 JIKA MAU LIHAT HASIL KLIK LINK DEMO DI BWAH
 LINK DEMO WEBSITE NYA :
-
+https://montu133.github.io/ZYE-STORE/
 
 ## Tentang Website Ini (HTML Web) 📄
 
@@ -30,7 +30,7 @@ Karena ini adalah website HTML sederhana, Anda tidak memerlukan server kompleks 
 
 ## Owner / Pengembang 👤
 
-Proyek ini dibuat dan dikelola oleh **[Nama GitHub Anda / Nama Anda]**.
+Proyek ini dibuat dan dikelola oleh **MONTU**.
 Anda dapat menghubungi owner melalui Telegram: **[@ZyeStoreid](https://t.me/ZyeStoreid)**
 
 ---
