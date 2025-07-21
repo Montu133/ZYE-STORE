@@ -210,12 +210,102 @@
                 opacity: 0; /* Fade out at the end */
             }
         }
+
+        /* Tutorial Modal Specific Styles */
+        #tutorialModal .modal-content {
+            max-width: 500px;
+            padding: 25px;
+        }
+        .tutorial-highlight {
+            position: fixed; /* Changed to fixed for consistent positioning */
+            border: 4px solid #FFD700; /* Gold color for highlight */
+            border-radius: 12px; /* Match product card radius */
+            z-index: 1001; /* Above everything else */
+            pointer-events: none; /* Crucial: allows clicks to pass through to the element below */
+            animation: pulse 1.5s infinite alternate; /* Pulsating effect */
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+            transition: all 0.3s ease-in-out; /* Smooth transition for position/size changes */
+        }
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.8; }
+            to { transform: scale(1.02); opacity: 1; }
+        }
+        .tutorial-instruction {
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            z-index: 1002;
+            pointer-events: none; /* Allow clicks to pass through */
+            opacity: 0;
+            transition: opacity 0.3s ease, top 0.3s ease, bottom 0.3s ease; /* Smooth transition for position */
+            transform: translateX(-50%); /* Center horizontally */
+            left: 50%;
+            text-align: center;
+            max-width: 80%; /* Limit width for mobile */
+        }
+        .tutorial-instruction.show {
+            opacity: 1;
+        }
+        .tutorial-instruction::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+        }
+
+        /* Arrow pointing down (instruction above target) */
+        .tutorial-instruction.arrow-down::after {
+            border-top: 10px solid rgba(0, 0, 0, 0.8); /* Match instruction background */
+            bottom: -10px; /* Position at the bottom of the instruction box */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Arrow pointing up (instruction below target) */
+        .tutorial-instruction.arrow-up::after {
+            border-bottom: 10px solid rgba(0, 0, 0, 0.8); /* Match instruction background */
+            top: -10px; /* Position at the top of the instruction box */
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Hand/Arrow SVG Icon for Tutorial */
+        .tutorial-arrow {
+            position: fixed; /* Changed to fixed for consistent positioning */
+            z-index: 1003; /* Above highlight and instruction */
+            pointer-events: none;
+            animation: bounce-arrow 1s infinite alternate;
+            transform-origin: center center; /* Ensure rotation is from center */
+            display: none; /* Hidden by default */
+        }
+        .tutorial-arrow.show {
+            display: block;
+        }
+        @keyframes bounce-arrow {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
     </style>
 </head>
 <body>
 
     <!-- Floating Name Animation Container -->
     <div id="floatingNameContainer" class="floating-name-container"></div>
+
+    <!-- Tutorial Highlight Overlay -->
+    <div id="tutorialHighlight" class="tutorial-highlight hidden"></div>
+    <div id="tutorialInstruction" class="tutorial-instruction hidden"></div>
+    <!-- Tutorial Arrow SVG -->
+    <svg id="tutorialArrow" class="tutorial-arrow" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <polyline points="19 12 12 19 5 12"></polyline>
+    </svg>
+
 
     <!-- Header Section -->
     <header class="flex flex-col md:flex-row justify-between items-center px-6 md:px-12">
@@ -225,12 +315,13 @@
                 <li><a href="#" class="hover:text-gray-200 transition-colors duration-200">Beranda</a></li>
                 <li><a href="#" class="hover:text-gray-200 transition-colors duration-200">Produk</a></li>
                 <li><a href="#" class="hover:text-gray-200 transition-colors duration-200">Dukungan</a></li>
+                <li><button id="showTutorialBtn" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full transition-all duration-200 text-base">Tutorial</button></li>
             </ul>
         </nav>
     </header>
 
     <!-- Main Content Area -->
-    <main class="flex-grow container mx-auto p-4 md:p-8">
+    <main id="mainContent" class="flex-grow container mx-auto p-4 md:p-8">
         <h2 class="text-4xl font-extrabold text-gray-800 text-center mb-10 mt-6">
             <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">Aplikasi Premium Termurah</span> ❤‍🔥‼️
         </h2>
@@ -268,6 +359,18 @@
         </div>
     </div>
 
+    <!-- Tutorial Modal (for initial welcome) -->
+    <div id="tutorialModal" class="modal">
+        <div class="modal-content">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4" id="tutorialTitle">Selamat Datang!</h3>
+            <p class="text-gray-700 mb-6" id="tutorialText">Mari kami tunjukkan cara mudah berbelanja di ZYE STORE ID.</p>
+            <div class="tutorial-buttons">
+                <button id="tutorialNextBtn" class="btn bg-blue-600 hover:bg-blue-700">Lanjut</button>
+                <button id="tutorialSkipBtn" class="btn bg-gray-500 hover:bg-gray-600">Lewati Tutorial</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const productListDiv = document.getElementById('product-list');
@@ -279,9 +382,24 @@
             const checkingAnimation = document.getElementById('checkingAnimation');
             const floatingNameContainer = document.getElementById('floatingNameContainer');
 
+            const tutorialModal = document.getElementById('tutorialModal'); // The initial welcome modal
+            const tutorialTitle = document.getElementById('tutorialTitle');
+            const tutorialText = document.getElementById('tutorialText');
+            const tutorialNextBtn = document.getElementById('tutorialNextBtn');
+            const tutorialSkipBtn = document.getElementById('tutorialSkipBtn');
+            const tutorialHighlight = document.getElementById('tutorialHighlight');
+            const tutorialInstruction = document.getElementById('tutorialInstruction'); // The floating instruction box with arrow
+            const tutorialArrow = document.getElementById('tutorialArrow'); // The SVG arrow
+            const showTutorialBtn = document.getElementById('showTutorialBtn'); // New tutorial button
+            const mainContent = document.getElementById('mainContent'); // Main content area for scroll
+
+            let currentTutorialStep = 0;
+            let firstProductBuyButton = null; // To store reference to the first product's buy button
+            let scrollListenerActive = false; // Flag to manage scroll listener
+
             // Data produk dengan harga yang sudah ditambahkan keuntungan
             const products = [
-                // Produk sebelumnya (keuntungan 1k)
+                // Previous products (1k profit)
                 { name: "Netflix 7 hari 1p1u", price: 12000 + 1000, desc: "Akses Netflix 7 hari untuk 1 profil, 1 pengguna." },
                 { name: "Netflix 1 bulan 1p1u", price: 40000 + 1000, desc: "Akses Netflix 1 bulan untuk 1 profil, 1 pengguna." },
                 { name: "Netflix 1 bulan 1p2u", price: 25000 + 1000, desc: "Akses Netflix 1 bulan untuk 1 profil, 2 pengguna." },
@@ -319,7 +437,7 @@
                 { name: "PicsArt Premium 1 bulan sharing", price: 8000 + 1000, desc: "PicsArt Premium 1 bulan sharing." },
                 { name: "Aplikasi Premium Lainnya", price: "Hubungi Kami", desc: "Wattpad, VSCO, Epik, Polar, Dazzcam, Oldroll, CamScanner, Catchplay, iFake, VPN Express, Crunchyroll, iLovePDF, Lightroom." },
 
-                // Produk baru (keuntungan 500 perak)
+                // New products (500 IDR profit)
                 { name: "WETV PRIVATE", price: 15000 + 500, desc: "GARANSI BACKFREE, LOGIN NOMOR" },
                 { name: "VIDIO PLATINUM", price: 21000 + 500, desc: "DURASI 1 BULAN, PRIVATE ALLDEV" },
                 { name: "YOUTUBE FAMHEAD", price: 3500 + 500, desc: "NOGARANSI, WAJIB GANTI SANDI" },
@@ -342,7 +460,7 @@
                 { name: "KODE REDEEM DUOLINGO SUPER", price: 3500 + 500, desc: "DURASI 1 BULAN, KODE EXP 2 SEPTEMBER 2025" }
             ];
 
-            // Fungsi untuk format harga ke Rupiah
+            // Function to format price to Rupiah
             const formatRupiah = (amount) => {
                 if (typeof amount === 'string') return amount; // For "Hubungi Kami" or non-numeric prices
                 return new Intl.NumberFormat('id-ID', {
@@ -352,7 +470,7 @@
                 }).format(amount);
             };
 
-            // Fungsi untuk menampilkan produk
+            // Function to render products
             const renderProducts = () => {
                 productListDiv.innerHTML = ''; // Clear existing products
                 products.forEach(product => {
@@ -394,6 +512,11 @@
                         checkingAnimation.classList.add('hidden');
                         confirmPaymentBtn.classList.remove('hidden');
                         confirmPaymentBtn.disabled = false;
+
+                        // If tutorial is active and we are in step 2, advance it
+                        if (tutorialInstruction.classList.contains('show') && currentTutorialStep === 2) {
+                            advanceTutorial();
+                        }
                     });
                 });
             };
@@ -401,6 +524,10 @@
             // Event listener for closing modal
             closeModalBtn.addEventListener('click', () => {
                 paymentModal.classList.remove('show');
+                // If tutorial is active and we are in step 3 or 4, end it
+                if (tutorialInstruction.classList.contains('show') && (currentTutorialStep === 3 || currentTutorialStep === 4)) {
+                    endTutorial();
+                }
             });
 
             // Event listener for confirming payment
@@ -408,10 +535,15 @@
                 confirmPaymentBtn.classList.add('hidden'); // Hide confirm button
                 checkingAnimation.classList.remove('hidden'); // Show checking animation
 
-                // Simulate payment checking
-                setTimeout(() => {
-                    window.location.href = 'https://t.me/ZyeStoreid'; // Redirect to Telegram
-                }, 3000); // 3 seconds delay for animation
+                // If tutorial is active and we are in step 4, advance it
+                if (tutorialInstruction.classList.contains('show') && currentTutorialStep === 4) {
+                    advanceTutorial();
+                } else {
+                    // Normal flow
+                    setTimeout(() => {
+                        window.location.href = 'https://t.me/ZyeStoreid'; // Redirect to Telegram
+                    }, 3000); // 3 seconds delay for animation
+                }
             });
 
             // --- Floating Name Animation Logic ---
@@ -450,8 +582,289 @@
             // Start generating floating names every few seconds
             setInterval(createFloatingName, 3000); // Create a new name every 3 seconds
 
-            // Render products on page load
-            renderProducts();
+            // --- Tutorial Logic ---
+            const tutorialSteps = [
+                {
+                    title: "Selamat Datang!",
+                    text: "Mari kami tunjukkan cara mudah berbelanja di ZYE STORE ID.",
+                    highlight: null,
+                    instructionText: null,
+                    buttonText: "Lanjut"
+                },
+                {
+                    title: "Lihat Produk Lainnya",
+                    text: "Gulir ke bawah untuk melihat semua daftar aplikasi premium yang tersedia.",
+                    highlight: () => mainContent, // Highlight main content area for scrolling cue
+                    instructionText: "Gulir ke bawah!",
+                    arrowDirection: 'down',
+                    action: 'scroll' // New action type for scrolling
+                },
+                {
+                    title: "Pilih Produk",
+                    text: "Untuk memulai, klik tombol 'Beli Sekarang' pada produk yang ingin Anda beli.",
+                    highlight: () => document.querySelector('.buy-button'), // Highlight the first buy button
+                    instructionText: "Klik 'Beli Sekarang'!",
+                    arrowDirection: 'down',
+                    action: 'click'
+                },
+                {
+                    title: "Lakukan Pembayaran",
+                    text: "Setelah modal pembayaran muncul, pindai QRIS ini untuk melakukan pembayaran.",
+                    highlight: () => document.querySelector('.qris-image'), // Highlight QRIS in modal
+                    instructionText: "Pindai QRIS ini!",
+                    arrowDirection: 'up', // Arrow points up to QRIS
+                    action: 'none' // No specific click action needed to advance from here
+                },
+                {
+                    title: "Konfirmasi Pembayaran",
+                    text: "Setelah transfer berhasil, klik tombol 'Konfirmasi Pembayaran'.",
+                    highlight: () => document.getElementById('confirmPaymentBtn'), // Highlight confirm button
+                    instructionText: "Klik 'Konfirmasi Pembayaran'!",
+                    arrowDirection: 'up', // Arrow points up to button
+                    action: 'click'
+                },
+                {
+                    title: "Tutorial Selesai!",
+                    text: "Pembayaran Anda akan diperiksa, lalu Anda akan diarahkan ke Telegram kami. Selamat berbelanja!",
+                    highlight: null,
+                    instructionText: null,
+                    buttonText: "Mulai Belanja",
+                    action: 'none'
+                }
+            ];
+
+            function showHighlight(element) {
+                if (!element) {
+                    hideHighlight();
+                    return;
+                }
+                const rect = element.getBoundingClientRect();
+                tutorialHighlight.style.width = `${rect.width}px`;
+                tutorialHighlight.style.height = `${rect.height}px`;
+                tutorialHighlight.style.top = `${rect.top}px`;
+                tutorialHighlight.style.left = `${rect.left}px`;
+                tutorialHighlight.classList.remove('hidden');
+            }
+
+            function hideHighlight() {
+                tutorialHighlight.classList.add('hidden');
+            }
+
+            function showInstruction(text, element, arrowDirection = 'down') {
+                if (!text) {
+                    tutorialInstruction.classList.remove('show');
+                    return;
+                }
+                tutorialInstruction.textContent = text;
+                tutorialInstruction.classList.remove('arrow-up', 'arrow-down'); // Reset arrow
+                tutorialInstruction.classList.add(`arrow-${arrowDirection}`); // Add new arrow class
+
+                // Ensure instruction box is visible to get its offsetHeight
+                tutorialInstruction.classList.remove('hidden');
+                tutorialInstruction.classList.add('show');
+                const instructionHeight = tutorialInstruction.offsetHeight;
+
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    let topPos;
+                    // Try to position above the element
+                    if (arrowDirection === 'down' && rect.top > instructionHeight + 30) { // If enough space above
+                        topPos = rect.top - instructionHeight - 20; // 20px above target
+                    } else if (arrowDirection === 'up' && window.innerHeight - rect.bottom > instructionHeight + 30) { // If enough space below
+                        topPos = rect.bottom + 20; // 20px below target
+                    } else { // Fallback: position above if space, else below
+                        if (rect.top > instructionHeight + 30) {
+                            topPos = rect.top - instructionHeight - 20;
+                            tutorialInstruction.classList.add('arrow-down');
+                        } else {
+                            topPos = rect.bottom + 20;
+                            tutorialInstruction.classList.add('arrow-up');
+                        }
+                    }
+                    tutorialInstruction.style.top = `${topPos}px`;
+                } else {
+                    // Default position for general messages (like welcome/end)
+                    tutorialInstruction.style.top = `20px`;
+                }
+            }
+
+            function hideInstruction() {
+                tutorialInstruction.classList.remove('show');
+                // Hide after transition for smooth fade out
+                setTimeout(() => tutorialInstruction.classList.add('hidden'), 300);
+            }
+
+            function showArrow(element, arrowDirection = 'down') {
+                if (!element) {
+                    hideArrow();
+                    return;
+                }
+                const rect = element.getBoundingClientRect();
+                const arrowSize = 50; // SVG size
+
+                let arrowTop, arrowLeft;
+                let rotation = 0; // Default: points down
+
+                if (arrowDirection === 'down') {
+                    arrowTop = rect.top - arrowSize + 10; // 10px above target
+                    arrowLeft = rect.left + (rect.width / 2) - (arrowSize / 2);
+                    rotation = 0; // Arrow pointing down
+                } else if (arrowDirection === 'up') {
+                    arrowTop = rect.bottom - 10; // 10px below target
+                    arrowLeft = rect.left + (rect.width / 2) - (arrowSize / 2);
+                    rotation = 180; // Arrow pointing up
+                } else if (arrowDirection === 'scroll') { // For scroll instruction, point down from top
+                    arrowTop = window.innerHeight * 0.2; // Fixed position, 20% from top
+                    arrowLeft = window.innerWidth / 2 - (arrowSize / 2);
+                    rotation = 0;
+                }
+
+                tutorialArrow.style.top = `${arrowTop}px`;
+                tutorialArrow.style.left = `${arrowLeft}px`;
+                tutorialArrow.style.transform = `rotate(${rotation}deg)`;
+                tutorialArrow.classList.add('show');
+            }
+
+            function hideArrow() {
+                tutorialArrow.classList.remove('show');
+            }
+
+            // Scroll handler for tutorial step 1
+            const handleScrollTutorial = () => {
+                if (currentTutorialStep === 1) { // Only active for scroll step
+                    // Check if user has scrolled down by at least 50 pixels
+                    if (window.scrollY > 50 || document.documentElement.scrollTop > 50) {
+                        window.removeEventListener('scroll', handleScrollTutorial);
+                        scrollListenerActive = false;
+                        advanceTutorial();
+                    }
+                }
+            };
+
+            function updateTutorial() {
+                const step = tutorialSteps[currentTutorialStep];
+
+                // For the very first step, show the full modal
+                if (currentTutorialStep === 0) {
+                    tutorialModal.classList.add('show');
+                    tutorialTitle.textContent = step.title;
+                    tutorialText.textContent = step.text;
+                    tutorialNextBtn.textContent = step.buttonText;
+                    hideHighlight();
+                    hideInstruction();
+                    hideArrow();
+                } else {
+                    // For subsequent steps, hide the full modal and use floating instruction/highlight
+                    tutorialModal.classList.remove('show');
+                    
+                    const targetElement = step.highlight ? step.highlight() : null;
+                    
+                    // Give a small delay to ensure elements are rendered/positioned before highlighting
+                    setTimeout(() => {
+                        showInstruction(step.instructionText, targetElement, step.arrowDirection);
+                        showHighlight(targetElement);
+                        showArrow(targetElement, step.arrowDirection);
+
+                        // Scroll to the element if it's not visible
+                        if (targetElement) {
+                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+
+                        // Activate scroll listener for the scroll step
+                        if (step.action === 'scroll' && !scrollListenerActive) {
+                            window.addEventListener('scroll', handleScrollTutorial);
+                            scrollListenerActive = true;
+                        } else if (step.action !== 'scroll' && scrollListenerActive) {
+                            window.removeEventListener('scroll', handleScrollTutorial);
+                            scrollListenerActive = false;
+                        }
+
+                    }, 100);
+                }
+
+                // Special handling for the last step
+                if (currentTutorialStep === tutorialSteps.length - 1) {
+                    tutorialSkipBtn.classList.add('hidden'); // No need to skip at the end
+                    tutorialNextBtn.removeEventListener('click', advanceTutorial);
+                    tutorialNextBtn.addEventListener('click', endTutorial);
+                } else {
+                    tutorialSkipBtn.classList.remove('hidden');
+                    tutorialNextBtn.removeEventListener('click', endTutorial);
+                    tutorialNextBtn.addEventListener('click', advanceTutorial);
+                }
+            }
+
+            function advanceTutorial() {
+                currentTutorialStep++;
+                if (currentTutorialStep < tutorialSteps.length) {
+                    // Special actions for specific steps
+                    if (currentTutorialStep === 2) { // After "Scroll" step, before "Beli Sekarang"
+                        // Ensure we are at the top of the products list for the next step
+                        productListDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else if (currentTutorialStep === 3) { // After "Beli Sekarang" clicked/simulated
+                        // Simulate click on the first product's buy button if not already clicked by user
+                        if (firstProductBuyButton && !paymentModal.classList.contains('show')) {
+                            firstProductBuyButton.click(); // This will open the payment modal
+                        }
+                    }
+                    updateTutorial();
+                } else {
+                    endTutorial();
+                }
+            }
+
+            function endTutorial() {
+                tutorialModal.classList.remove('show');
+                hideHighlight();
+                hideInstruction();
+                hideArrow();
+                localStorage.setItem('tutorialSeen', 'true'); // Mark tutorial as seen
+                // Remove scroll listener if still active
+                if (scrollListenerActive) {
+                    window.removeEventListener('scroll', handleScrollTutorial);
+                    scrollListenerActive = false;
+                }
+                // If payment modal is open from tutorial, close it
+                if (paymentModal.classList.contains('show')) {
+                    paymentModal.classList.remove('show');
+                }
+                // If we were in the middle of a payment process from tutorial, redirect
+                if (currentTutorialStep === tutorialSteps.length - 1) { // If tutorial ended on the "Selesai" step after confirming payment
+                     setTimeout(() => {
+                        window.location.href = 'https://t.me/ZyeStoreid'; // Redirect to Telegram
+                    }, 100); // Small delay to ensure modal closes
+                }
+            }
+
+            // Event listeners for tutorial buttons
+            tutorialNextBtn.addEventListener('click', advanceTutorial);
+            tutorialSkipBtn.addEventListener('click', endTutorial);
+
+            // Event listener for the new "Tutorial" button
+            showTutorialBtn.addEventListener('click', () => {
+                currentTutorialStep = 0; // Reset tutorial to start
+                updateTutorial();
+            });
+
+            // Initial setup
+            renderProducts(); // Render products first
+
+            // Find the first product's buy button after rendering
+            setTimeout(() => {
+                firstProductBuyButton = document.querySelector('.buy-button');
+            }, 500); // Small delay
+
+            // Show tutorial button only if tutorial has been seen, otherwise show initial modal
+            if (!localStorage.getItem('tutorialSeen')) {
+                updateTutorial(); // Start tutorial from step 0 automatically
+                showTutorialBtn.classList.add('hidden'); // Hide the button if tutorial starts automatically
+            } else {
+                tutorialModal.classList.remove('show'); // Ensure tutorial is hidden if seen
+                hideHighlight();
+                hideInstruction();
+                hideArrow();
+                showTutorialBtn.classList.remove('hidden'); // Show the button if tutorial has been seen
+            }
         });
     </script>
 </body>
